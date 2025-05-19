@@ -1,0 +1,10 @@
+services:
+  postgres:
+    container_name: seacrate-postgres
+    image: postgres
+    environment:
+      POSTGRES_USER: seacrate
+      POSTGRES_PASSWORD: seacrate
+    ports:
+      - 5432:5432
+
