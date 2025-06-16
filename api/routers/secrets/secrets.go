@@ -34,11 +34,7 @@ func CreateSecret(ctx fiber.Ctx) error {
 
 	encryptedValue, err := engines.EncryptionEngine.EncryptData([]byte(in.Value))
 	if err != nil {
-		ctx.Status(500).JSON(models.ErrorResponse{
-			Error:   "Internal server error",
-			Details: "An error happened during encryption of the data",
-		})
-		return nil
+		return fmt.Errorf("An error happened during encryption of the data.")
 	}
 
 	// Create secret in database
@@ -57,12 +53,14 @@ func CreateSecret(ctx fiber.Ctx) error {
 				Details: err.Error(),
 			})
 			return nil
-		default:
-			ctx.Status(500).JSON(models.ErrorResponse{
-				Error:   "Internal Server Error",
-				Details: fmt.Sprintf("Error during creation : %v", err.Error()),
+		case seacrateErrors.ErrOverridingSecret:
+			ctx.Status(400).JSON(models.ErrorResponse{
+				Error:   "Could not create secret",
+				Details: err.Error(),
 			})
 			return nil
+		default:
+			return fmt.Errorf("An error happened during creation of the secret")
 		}
 	}
 
@@ -100,11 +98,7 @@ func GetSecret(ctx fiber.Ctx) error {
 			})
 			return nil
 		default:
-			ctx.Status(500).JSON(models.ErrorResponse{
-				Error:   "Internal Server Error",
-				Details: err.Error(),
-			})
-			return nil
+			return fmt.Errorf("An error happened while trying to get the secret.")
 		}
 	}
 
@@ -121,19 +115,12 @@ func GetSecret(ctx fiber.Ctx) error {
 
 	stringToHex, err := hex.DecodeString(secret.Value)
 	if err != nil {
-		ctx.Status(500).JSON(models.ErrorResponse{
-			Error:   "Internal server error",
-			Details: "An error happened during deconding hex to bytes",
-		})
+		return fmt.Errorf("An error happened while decoding hex to bytes.")
 	}
 
 	decryptedData, err := engines.EncryptionEngine.DecryptData(stringToHex)
 	if err != nil {
-		ctx.Status(500).JSON(models.ErrorResponse{
-			Error:   "Internal server error",
-			Details: "An error happened during decryption of the data",
-		})
-		return nil
+		return fmt.Errorf("An error happened during decryption of the data.")
 	}
 
 	secret.Value = string(decryptedData)
@@ -161,11 +148,7 @@ func DeleteSecret(ctx fiber.Ctx) error {
 			})
 			return nil
 		default:
-			ctx.Status(500).JSON(models.ErrorResponse{
-				Error:   "Internal Server Error",
-				Details: err.Error(),
-			})
-			return nil
+			return fmt.Errorf("An error happened during the deletion of the secret.")
 		}
 	}
 

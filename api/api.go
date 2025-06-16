@@ -2,7 +2,9 @@ package api
 
 import (
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/logger"
 	"github.com/gofiber/fiber/v3/middleware/recover"
+	"github.com/redat00/seacrate/api/handlers"
 	"github.com/redat00/seacrate/api/middlewares"
 	"github.com/redat00/seacrate/api/routers/secrets"
 	"github.com/redat00/seacrate/api/routers/system"
@@ -18,7 +20,11 @@ func NewApi(
 	encryptionEngine encryption.EncryptionEngine,
 	databaseEngine database.DatabaseEngine,
 ) *fiber.App {
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		ErrorHandler: handlers.ErrorHandler,
+	})
+
+	app.Use(logger.New())
 
 	app.Use(
 		middlewares.EnginesMiddleware(

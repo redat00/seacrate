@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/gofiber/fiber/v3"
 	"github.com/redat00/seacrate/api"
 	"github.com/redat00/seacrate/internal/config"
 	"github.com/redat00/seacrate/internal/database"
@@ -35,6 +36,8 @@ var runCmd = &cobra.Command{
 		}
 
 		seacrateApi := api.NewApi(encryptionEngine, databaseEngine)
-		seacrateApi.Listen(":3000")
+		seacrateApi.Listen(":3000", fiber.ListenConfig{
+			DisableStartupMessage: true,
+		})
 	},
 }

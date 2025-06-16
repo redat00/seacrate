@@ -47,6 +47,21 @@ func (d *DatabaseEngine) checkIfSecretExist(key string, parentFolder string) boo
 	return false
 }
 
+func (d *DatabaseEngine) checkIfAnyPathInPathIsSecret(path string) bool {
+	parts := strings.Split(path, "/")
+	for i := 1; i < len(parts); i++ {
+		pathSegment := strings.Join(parts[:len(parts)-i], "/")
+		if pathSegment == "" {
+			pathSegment = "/"
+		}
+		segmentPart := parts[len(parts)-i]
+		if d.checkIfSecretExist(segmentPart, pathSegment) {
+			return true
+		}
+	}
+	return false
+}
+
 func (d *DatabaseEngine) CreateSecret(key string, value string) error {
 	folders, parentFolder, secretKey := splitSecretKey(key)
 
@@ -58,6 +73,13 @@ func (d *DatabaseEngine) CreateSecret(key string, value string) error {
 	// Make sure that we are not overriding any folder
 	if d.checkIfFolderExist(key) {
 		return seacrateErrors.ErrOverridingFolder{Key: key}
+	}
+
+	if parentFolder != "/" {
+		// Make sure that none of the parent folder is an existing secret
+		if d.checkIfAnyPathInPathIsSecret(parentFolder) {
+			return seacrateErrors.ErrOverridingSecret{Key: key}
+		}
 	}
 
 	// We need to create each folder
